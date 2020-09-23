@@ -8,7 +8,7 @@ from gym.spaces import Discrete, Tuple
 from gym.spaces import prng
 
 
-class CoinGameVec:
+class CoinGameVec(gym.Env):
     """
     Vectorized Coin Game environment.
     Note: slightly deviates from the Gym API.
@@ -28,6 +28,11 @@ class CoinGameVec:
         self.batch_size = batch_size
         # The 4 channels stand for 2 players and 2 coin positions
         self.ob_space_shape = [4, grid_size, grid_size]
+        self.NUM_STATES = np.prod(self.ob_space_shape)
+        self.available_actions = [
+            np.ones((batch_size, self.NUM_ACTIONS), dtype=int)
+            for _ in range(self.NUM_AGENTS)
+        ]
 
         self.step_count = None
 
@@ -45,13 +50,18 @@ class CoinGameVec:
             while self._same_pos(self.red_pos[i], self.blue_pos[i]):
                 self.blue_pos[i] = prng.np_random.randint(self.grid_size, size=2)
             self._generate_coin(i)
-        return self._generate_state()
+        state = self._generate_state()
+        state = np.reshape(state, (self.batch_size, -1))
+        observations = [state, state]
+        info = [{'available_actions': aa} for aa in self.available_actions]
+        return observations, info
 
     def _generate_coin(self, i):
         self.red_coin[i] = 1 - self.red_coin[i]
-        # Make sure coin has a different position than the agents
+        # Make sure coin has a different position than the agent
         success = 0
         while success < 2:
+            success = 0
             self.coin_pos[i] = prng.np_random.randint(self.grid_size, size=(2))
             success  = 1 - self._same_pos(self.red_pos[i],
                                           self.coin_pos[i])
@@ -73,54 +83,49 @@ class CoinGameVec:
         return state
 
     def step(self, actions):
+        ac0, ac1 = actions
+
+        self.step_count += 1
+
         for j in range(self.batch_size):
-            ac0, ac1 = actions[j]
-            assert ac0 in {0, 1, 2, 3} and ac1 in {0, 1, 2, 3}
+            a0, a1 = ac0[j], ac1[j]
+            assert a0 in {0, 1, 2, 3} and a1 in {0, 1, 2, 3}
 
             # Move players
             self.red_pos[j] = \
-                (self.red_pos[j] + self.MOVES[ac0]) % self.grid_size
+                (self.red_pos[j] + self.MOVES[a0]) % self.grid_size
             self.blue_pos[j] = \
-                (self.blue_pos[j] + self.MOVES[ac1]) % self.grid_size
+                (self.blue_pos[j] + self.MOVES[a1]) % self.grid_size
 
         # Compute rewards
-        reward_red, reward_blue = [], []
+        reward_red = np.zeros(self.batch_size)
+        reward_blue = np.zeros(self.batch_size)
         for i in range(self.batch_size):
             generate = False
             if self.red_coin[i]:
                 if self._same_pos(self.red_pos[i], self.coin_pos[i]):
                     generate = True
-                    reward_red.append(1)
-                    reward_blue.append(0)
-                elif self._same_pos(self.blue_pos[i], self.coin_pos[i]):
+                    reward_red[i] += 1
+                if self._same_pos(self.blue_pos[i], self.coin_pos[i]):
                     generate = True
-                    reward_red.append(-2)
-                    reward_blue.append(1)
-                else:
-                    reward_red.append(0)
-                    reward_blue.append(0)
-
+                    reward_red[i] += -2
+                    reward_blue[i] += 1
             else:
                 if self._same_pos(self.red_pos[i], self.coin_pos[i]):
                     generate = True
-                    reward_red.append(1)
-                    reward_blue.append(-2)
-                elif self._same_pos(self.blue_pos[i], self.coin_pos[i]):
+                    reward_red[i] += 1
+                    reward_blue[i] += -2
+                if self._same_pos(self.blue_pos[i], self.coin_pos[i]):
                     generate = True
-                    reward_red.append(0)
-                    reward_blue.append(1)
-                else:
-                    reward_red.append(0)
-                    reward_blue.append(0)
+                    reward_blue[i] += 1
 
             if generate:
                 self._generate_coin(i)
 
-        reward = [np.array(reward_red), np.array(reward_blue)]
-        self.step_count += 1
-        done = np.array([
-            (self.step_count == self.max_steps) for _ in range(self.batch_size)
-        ])
-        state = self._generate_state()
+        reward = [reward_red, reward_blue]
+        state = self._generate_state().reshape((self.batch_size, -1))
+        observations = [state, state]
+        done = (self.step_count == self.max_steps)
+        info = [{'available_actions': aa} for aa in self.available_actions]
 
-        return state, reward, done
+        return observations, reward, done, info
