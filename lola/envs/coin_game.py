@@ -8,7 +8,7 @@ from gym.spaces import Discrete, Tuple
 from gym.spaces import prng
 
 
-class CoinGameVec(gym.Env):
+class CoinGameVec:
     """
     Vectorized Coin Game environment.
     Note: slightly deviates from the Gym API.
@@ -28,11 +28,6 @@ class CoinGameVec(gym.Env):
         self.batch_size = batch_size
         # The 4 channels stand for 2 players and 2 coin positions
         self.ob_space_shape = [4, grid_size, grid_size]
-        self.NUM_STATES = np.prod(self.ob_space_shape)
-        self.available_actions = [
-            np.ones((batch_size, self.NUM_ACTIONS), dtype=int)
-            for _ in range(self.NUM_AGENTS)
-        ]
 
         self.step_count = None
 
@@ -50,11 +45,7 @@ class CoinGameVec(gym.Env):
             while self._same_pos(self.red_pos[i], self.blue_pos[i]):
                 self.blue_pos[i] = prng.np_random.randint(self.grid_size, size=2)
             self._generate_coin(i)
-        state = self._generate_state()
-        state = np.reshape(state, (self.batch_size, -1))
-        observations = [state, state]
-        info = [{'available_actions': aa} for aa in self.available_actions]
-        return observations, info
+        return self._generate_state()
 
     def _generate_coin(self, i):
         self.red_coin[i] = 1 - self.red_coin[i]
@@ -83,12 +74,12 @@ class CoinGameVec(gym.Env):
         return state
 
     def step(self, actions):
-        ac0, ac1 = actions
 
         self.step_count += 1
 
         for j in range(self.batch_size):
-            a0, a1 = ac0[j], ac1[j]
+            a0, a1 = actions[j]
+
             assert a0 in {0, 1, 2, 3} and a1 in {0, 1, 2, 3}
 
             # Move players
@@ -123,9 +114,6 @@ class CoinGameVec(gym.Env):
                 self._generate_coin(i)
 
         reward = [reward_red, reward_blue]
-        state = self._generate_state().reshape((self.batch_size, -1))
-        observations = [state, state]
+        state = self._generate_state() 
         done = (self.step_count == self.max_steps)
-        info = [{'available_actions': aa} for aa in self.available_actions]
-
-        return observations, reward, done, info
+        return state, reward, done

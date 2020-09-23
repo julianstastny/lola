@@ -40,6 +40,7 @@ def train(env, *, num_episodes, trace_length, batch_size,
     num_episodes = num_episodes #How many episodes of game environment to train network with.
     load_model = False #Whether to load a saved model.
     path = "./drqn" #The path to save our model to.
+    summary_step = 1
     n_agents = env.NUM_AGENTS
     total_n_agents = n_agents
     h_size = [hidden] * total_n_agents
@@ -82,9 +83,11 @@ def train(env, *, num_episodes, trace_length, batch_size,
         clone_update(mainPN_clone)
 
     init = tf.global_variables_initializer()
-    # saver = tf.train.Saver(max_to_keep=5)
-
+    
     trainables = tf.trainable_variables()
+
+    saver = tf.train.Saver(trainables, max_to_keep=5, save_relative_paths=True)
+
 
     #create lists to contain total rewards and steps per episode
     jList = []
@@ -205,7 +208,7 @@ def train(env, *, num_episodes, trace_length, batch_size,
                 s_old = s
                 s = s1
                 sP = s1P
-                if d.any():
+                if d:
                     break
 
             jList.append(j)
@@ -332,7 +335,11 @@ def train(env, *, num_episodes, trace_length, batch_size,
             episodes_actions[agent] = episodes_actions[agent] * 0
             episodes_reward[agent] = episodes_reward[agent] * 0
 
+
             if len(rList) % summary_len == 0 and len(rList) != 0 and updated:
+                print("Saving models.")
+                saver.save(sess, os.path.join(path, 'variables'), global_step=summary_step)
+                summary_step += 1
                 updated = False
                 print(total_steps, 'reward', np.sum(rList[-summary_len:], 0))
                 rlog = np.sum(rList[-summary_len:], 0)
