@@ -138,6 +138,7 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
 
     # Run training
     if seed is None:
+        assert trials==1, "If doing more than one trial, specify seed."
         logger.configure(dir='logs/{}/no-seed'.format(exp_name))
         start_time = time.time()
         run(env, save_path=f"./drqn")
@@ -147,7 +148,7 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
             logger.configure(dir='logs/{}/seed-{}'.format(exp_name, _seed))
             start_time = time.time()
             run(env, save_path=f"./drqn_{_seed}")
-            end_time  = time.time()
+            end_time = time.time()
 
 if __name__ == '__main__':
     main()
