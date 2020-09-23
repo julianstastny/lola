@@ -22,7 +22,7 @@ from lola.envs import *
               help="Only used with exact version of LOLA.")
 @click.option("--grid_size", type=int, default=3,
               help="Grid size of the coin game (used only for coin game).")
-@click.option("--trials", type=int, default=2, help="Number of trials.")
+@click.option("--trials", type=int, default=1, help="Number of trials.")
 
 # Learning parameters
 @click.option("--lola/--no-lola", default=True,
