@@ -96,10 +96,10 @@ class CoinGameVec:
             if self.red_coin[i]:
                 if self._same_pos(self.red_pos[i], self.coin_pos[i]):
                     generate = True
-                    reward_red[i] += 1
+                    reward_red[i] += 2 # Set to 1 to make it symmetric again
                 if self._same_pos(self.blue_pos[i], self.coin_pos[i]):
                     generate = True
-                    reward_red[i] += -2
+                    reward_red[i] += -1 # Set to -2 to make it symmetric again
                     reward_blue[i] += 1
             else:
                 if self._same_pos(self.red_pos[i], self.coin_pos[i]):
