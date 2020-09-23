@@ -143,7 +143,7 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
         run(env, save_path=f"./drqn")
         end_time  = time.time()
     else:
-        for _seed in range(seed + trials):
+        for _seed in range(seed, seed + trials):
             logger.configure(dir='logs/{}/seed-{}'.format(exp_name, _seed))
             start_time = time.time()
             run(env, save_path=f"./drqn_{_seed}")
