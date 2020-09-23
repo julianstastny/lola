@@ -78,7 +78,7 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
     # Import the right training function
     if exact:
         assert exp_name != "CoinGame", "Can't run CoinGame with --exact."
-        def run(env):
+        def run(env, save_path=None):
             from lola.train_exact import train
             train(env,
                   num_episodes=num_episodes,
@@ -92,7 +92,7 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                   lr_correction=lr_correction,
                   gamma=gamma)
     elif exp_name in {"IPD", "IMP"}:
-        def run(env):
+        def run(env, save_path=None):
             from lola.train_pg import train
             train(env,
                   num_episodes=num_episodes,
@@ -106,7 +106,7 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                   hidden=hidden,
                   mem_efficient=mem_efficient)
     elif exp_name == "CoinGame":
-        def run(env):
+        def run(env, save_path=None):
             from lola.train_cg import train
             train(env,
                   num_episodes=num_episodes,
@@ -119,7 +119,9 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                   corrections=lola,
                   opp_model=opp_model,
                   hidden=hidden,
-                  mem_efficient=mem_efficient)
+                  mem_efficient=mem_efficient,
+                  path=save_path
+                  )
 
     # Instantiate the environment
     if exp_name == "IPD":
@@ -136,7 +138,7 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
     for seed in range(trials):
         logger.configure(dir='logs/{}/seed-{}'.format(exp_name, seed))
         start_time = time.time()
-        run(env)
+        run(env, save_path=f"./drqn_{seed}")
         end_time  = time.time()
 
 if __name__ == '__main__':

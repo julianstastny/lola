@@ -31,7 +31,7 @@ def clone_update(mainPN_clone):
 
 def train(env, *, num_episodes, trace_length, batch_size,
           corrections, opp_model, grid_size, gamma, hidden, bs_mul, lr,
-          mem_efficient=True):
+          mem_efficient=True, path="./drqn"):
     #Setting the training parameters
     batch_size = batch_size #How many experience traces to use for each training step.
     trace_length = trace_length #How long each experience trace will be when training
@@ -39,7 +39,6 @@ def train(env, *, num_episodes, trace_length, batch_size,
     y = gamma
     num_episodes = num_episodes #How many episodes of game environment to train network with.
     load_model = False #Whether to load a saved model.
-    path = "./drqn" #The path to save our model to.
     summary_step = 1
     n_agents = env.NUM_AGENTS
     total_n_agents = n_agents
