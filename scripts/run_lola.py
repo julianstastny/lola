@@ -23,6 +23,8 @@ from lola.envs import *
 @click.option("--grid_size", type=int, default=3,
               help="Grid size of the coin game (used only for coin game).")
 @click.option("--trials", type=int, default=1, help="Number of trials.")
+@click.option("--seed", type=int, default=None, help="Random Seed.")
+
 
 # Learning parameters
 @click.option("--lola/--no-lola", default=True,
@@ -55,7 +57,7 @@ from lola.envs import *
 
 def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
          trials, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
-         num_units, reg, gamma, lola, opp_model, mem_efficient):
+         num_units, reg, gamma, lola, opp_model, mem_efficient, seed):
     # Sanity
     assert exp_name in {"CoinGame", "IPD", "IMP"}
 
@@ -135,11 +137,17 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
         gamma = 0.96 if gamma is None else gamma
 
     # Run training
-    for seed in range(trials):
-        logger.configure(dir='logs/{}/seed-{}'.format(exp_name, seed))
+    if seed is None:
+        logger.configure(dir='logs/{}/no-seed'.format(exp_name))
         start_time = time.time()
-        run(env, save_path=f"./drqn_{seed}")
+        run(env, save_path=f"./drqn")
         end_time  = time.time()
+    else:
+        for _seed in range(seed + trials):
+            logger.configure(dir='logs/{}/seed-{}'.format(exp_name, _seed))
+            start_time = time.time()
+            run(env, save_path=f"./drqn_{_seed}")
+            end_time  = time.time()
 
 if __name__ == '__main__':
     main()
