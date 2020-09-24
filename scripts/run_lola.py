@@ -143,7 +143,7 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
         assert trials==1, "If doing more than one trial, specify seed."
         logger.configure(dir='logs/{}/no-seed-run{}'.format(exp_name, run_id))
         start_time = time.time()
-        run(env, save_path=f"./drqn_run{run_id}")
+        run(env, save_path=f"./drqn/run_{run_id}")
         end_time  = time.time()
     else:
         for _seed in range(seed, seed + trials):
