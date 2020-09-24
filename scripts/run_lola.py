@@ -4,6 +4,8 @@ import click
 import time
 
 from lola import logger
+import multiprocessing as mp
+from functools import partial
 
 from lola.envs import *
 
@@ -56,10 +58,29 @@ from lola.envs import *
               help="Regularization parameter.")
 @click.option("--gamma", type=float, default=None,
               help="Discount factor.")
+@click.option("--num_replicates", type=int, default=8,
+              help="Discount factor.")
+@click.option("--batch_id", type=int, default=0,
+              help="Discount factor.")
 
-def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+def main(num_replicates, batch_id, exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
          trials, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
          num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id):
+    pool = mp.Pool(num_replicates)
+    job = partial(experiment, exp_name=exp_name, num_episodes=num_episodes, trace_length=trace_length,
+                  exact=exact, pseudo=pseudo, grid_size=grid_size, trials=trials, lr=lr, lr_correction=lr_correction,
+                  batch_size=batch_size, bs_mul=bs_mul, simple_net=simple_net, hidden=hidden, num_units=num_units,
+                  reg=reg, gamma=gamma, lola=lola, opp_model=opp_model, mem_efficient=mem_efficient, seed=seed,
+                  run_id=run_id)
+
+    job_ids = range(batch_id*num_replicates, (batch_id+1)*num_replicates)
+    pool.map(job, job_ids)
+
+    return
+
+def experiment(run_id, exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+               trials, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+               num_units, reg, gamma, lola, opp_model, mem_efficient, seed):
     # Sanity
     assert exp_name in {"CoinGame", "IPD", "IMP"}
 
