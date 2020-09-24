@@ -4,6 +4,7 @@ Training funcion for the Coin Game.
 import os
 import numpy as np
 import tensorflow as tf
+import pdb
 
 from . import logger
 
@@ -193,14 +194,17 @@ def train(env, *, num_episodes, trace_length, batch_size,
                 for index in range(batch_size):
                     r_pb = [r[0][index], r[1][index]]
                     if np.array(r_pb).any():
-                        if r_pb[0] == 1 and r_pb[1] == 0:
-                            rAll[0] += 1
-                        elif r_pb[0] == 0 and r_pb[1] == 1:
-                            rAll[1] += 1
-                        elif r_pb[0] == 1 and r_pb[1] == -2:
-                            rAll[2] += 1
-                        elif r_pb[0] == -2 and r_pb[1] == 1:
-                            rAll[3] += 1
+                        # Instead just record each agent's rewards
+                        rAll[0] += r_pb[0]
+                        rAll[1] += r_pb[1]
+                        # if r_pb[0] == 1 and r_pb[1] == 0:
+                        #     rAll[0] += 1
+                        # elif r_pb[0] == 0 and r_pb[1] == 1:
+                        #     rAll[1] += 1
+                        # elif r_pb[0] == 1 and r_pb[1] == -2:
+                        #     rAll[2] += 1
+                        # elif r_pb[0] == -2 and r_pb[1] == 1:
+                        #     rAll[3] += 1
 
                 aAll[a_all[0]] += 1
                 aAll[a_all[1] + 4] += 1
