@@ -1,3 +1,5 @@
+export KMP_AFFINITY=disabled
+
 NPROC=$(nproc)
 echo "$NPROC"
 for j in $(seq 0 $1); do
