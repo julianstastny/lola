@@ -205,3 +205,10 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
           logger.record_tabular('rList[' + str(ii) + ']', rlog[ii])
         logger.dump_tabular()
         logger.info('')
+
+  mean_payoffs_per_episode = np.mean(rList, 0) / batch_size
+  mean_payoffs_per_episode_1 = mean_payoffs_per_episode[0]
+  mean_payoffs_per_episode_2 = mean_payoffs_per_episode[1]
+
+  return mean_payoffs_per_episode_1, mean_payoffs_per_episode_2
+

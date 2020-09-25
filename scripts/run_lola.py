@@ -57,12 +57,51 @@ from lola.envs import *
               help="Regularization parameter.")
 @click.option("--gamma", type=float, default=None,
               help="Discount factor.")
-
-
 def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
          trials, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
          num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
          deploy_saved):
+
+    if deploy_saved:
+      self_play_payoffs_1 = []
+      self_play_payoffs_2 = []
+      cross_play_payoffs_1 = []
+      cross_play_payoffs_2 = []
+      models_lst = ['./drqn/models/models-1/run_1/variables-1060',
+                    './drqn/models/models-1/run_2/variables-1060',
+                    './drqn/models/models-2/run_1/variables-1020',
+                    './drqn/models/models-2/run_2/variables-530',
+                    './drqn/models/models-3/run_1/variables-526',
+                    './drqn/models/models-3/run_2/variables-1059',
+                    './drqn/models/models-4/run_1/variables-1059',
+                    './drqn/models/models-4/run_2/variables-523']
+
+      for trial in range(trials):
+        model1 = models_lst[trial]
+        sp1, sp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+                   1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+                   num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+                   deploy_saved, path1=model1)
+        self_play_payoffs_1.append(sp1)
+        self_play_payoffs_2.append(sp2)
+        if trial > 0:
+          model2 = models_lst[trial-1]
+          cp1, cp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+                                1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+                                num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+                                deploy_saved, path1=model1, path2=model2)
+          cross_play_payoffs_1.append(cp1)
+          cross_play_payoffs_2.append(cp2)
+    else:
+      experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+                 trials, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+                 num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+                 deploy_saved)
+
+def experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+         trials, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+         num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+         deploy_saved, path1=None, path2=None):
     # Sanity
     assert exp_name in {"CoinGame", "IPD", "IMP"}
 
@@ -164,16 +203,19 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
         logger.configure(dir='logs/{}/no-seed-run{}'.format(exp_name, run_id))
         start_time = time.time()
         if deploy_saved:
-          run(env)
+          payoff_1, payoff_2 = run(env)
+          return payoff_1, payoff_2
         else:
           run(env, save_path=f"./drqn/run_{run_id}")
         end_time  = time.time()
+
     else:
         for _seed in range(seed, seed + trials):
             logger.configure(dir='logs/{}/seed-{}'.format(exp_name, _seed))
             start_time = time.time()
             run(env, save_path=f"./drqn_{_seed}")
             end_time = time.time()
+
 
 if __name__ == '__main__':
     main()
