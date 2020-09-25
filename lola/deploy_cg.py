@@ -48,7 +48,7 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
   max_epLength = trace_length + 1  # The max allowed length of our episode.
   summary_len = 20  # Number of episodes to periodically save for analysis
 
-  # tf.reset_default_graph()
+  tf.reset_default_graph()
   mainPN = []
   mainPN_step = []
   agent_list = np.arange(total_n_agents)
@@ -209,6 +209,10 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
   mean_payoffs_per_episode = np.mean(rList, 0) / batch_size
   mean_payoffs_per_episode_1 = mean_payoffs_per_episode[0]
   mean_payoffs_per_episode_2 = mean_payoffs_per_episode[1]
+
+  sess.close()
+  if path2 is not None:
+    sess2.close()
 
   return mean_payoffs_per_episode_1, mean_payoffs_per_episode_2
 

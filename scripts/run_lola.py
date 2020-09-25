@@ -4,6 +4,7 @@ import click
 import time
 
 from lola import logger
+import matplotlib.pyplot as plt
 
 from lola.envs import *
 
@@ -76,7 +77,7 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                     './drqn/models/models-4/run_1/variables-1059',
                     './drqn/models/models-4/run_2/variables-523']
 
-      for trial in range(trials):
+      for trial in range(len(models_lst)):
         model1 = models_lst[trial]
         sp1, sp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                    1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
@@ -92,11 +93,17 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                                 deploy_saved, path1=model1, path2=model2)
           cross_play_payoffs_1.append(cp1)
           cross_play_payoffs_2.append(cp2)
+      plt.scatter(self_play_payoffs_1, self_play_payoffs_2, label='self-play')
+      plt.scatter(cross_play_payoffs_1, cross_play_payoffs_2, label='cross-play')
+      plt.legend()
+      plt.show()
     else:
       experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                  trials, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
                  num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
                  deploy_saved)
+
+
 
 def experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
          trials, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
@@ -155,7 +162,7 @@ def experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
         if deploy_saved:
           from lola.deploy_cg import deploy
           def run(env):
-            deploy(env,
+            return deploy(env,
                   num_episodes=num_episodes,
                   trace_length=trace_length,
                   batch_size=batch_size,
@@ -200,7 +207,7 @@ def experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
     # Run training
     if seed is None:
         assert trials==1, "If doing more than one trial, specify seed."
-        logger.configure(dir='logs/{}/no-seed-run{}'.format(exp_name, run_id))
+        # logger.configure(dir='logs/{}/no-seed-run{}'.format(exp_name, run_id))
         start_time = time.time()
         if deploy_saved:
           payoff_1, payoff_2 = run(env)
@@ -218,4 +225,4 @@ def experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
 
 
 if __name__ == '__main__':
-    main()
+    results = main()
