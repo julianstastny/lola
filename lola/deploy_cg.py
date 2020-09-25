@@ -32,7 +32,7 @@ def clone_update(mainPN_clone):
 
 def deploy(env, *, num_episodes, trace_length, batch_size,
           corrections, opp_model, grid_size, gamma, hidden, bs_mul, lr,
-          mem_efficient=True, path1='./drqn/run_1', path2=None):
+          mem_efficient=True, path1='./models', path2='./models'):
 
   # Setting the training parameters
   batch_size = batch_size  # How many experience traces to use for each training step.
@@ -68,10 +68,13 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
 
   corrections_func(mainPN, batch_size, trace_length, corrections, cube)
 
-  saver1_path = os.path.join(path1, 'variables-1.meta')
-  model1_path = os.path.join(path1, 'variables-1')
+  # saver1_path = os.path.join(path1, 'models-1/run_1/variables-1060.meta')
+  # model1_path = os.path.join(path1, 'models-1/run_1/variables-1060')
+  saver1_path = os.path.join(path1, 'models-1/run_2/variables-1060.meta')
+  model1_path = os.path.join(path1, 'models-1/run_1/variables-1060')
+  if path2 is not None:
   # saver2_path = os.path.join(path2, 'variables-1.meta')
-  # model2_path = os.path.join(path2, 'variables-1')
+    model2_path = os.path.join(path2, 'models-1/run_2/variables-1060')
 
   # create lists to contain total rewards and steps per episode
   jList = []
@@ -97,12 +100,17 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
     # ckpt = tf.train.get_checkpoint_state('./drqn/run_1')
     # saver1.restore(sess, ckpt.model_checkpoint_path)
     saver1.restore(sess, model1_path)
+    if path2 is not None:
+      sess2 = tf.Session()
+      sessions = [sess, sess2]
+      saver1.restore(sess2, model2_path)
+    else:
+      sessions = [sess, sess]
 
     if not mem_efficient:
       sess.run(cube_ops)
 
     sP = env.reset()
-    updated = True
     for i in range(num_episodes):
       episodeBuffer = []
       for ii in range(n_agents):
@@ -136,7 +144,8 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
         a_all = []
         lstm_state = []
         for agent_role, agent in enumerate(these_agents):
-          a, lstm_s = sess.run(
+          policy_sess = sessions[agent_role]
+          a, lstm_s = policy_sess.run(
             [
               mainPN_step[agent].predict,
               mainPN_step[agent].lstm_state_output
@@ -160,18 +169,17 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
 
         for index in range(batch_size):
           r_pb = [r[0][index], r[1][index]]
-          if np.array(r_pb).any():
-            # Instead just record each agent's rewards
-            rAll[0] += r_pb[0]
-            rAll[1] += r_pb[1]
-            # if r_pb[0] == 1 and r_pb[1] == 0:
-            #     rAll[0] += 1
-            # elif r_pb[0] == 0 and r_pb[1] == 1:
-            #     rAll[1] += 1
-            # elif r_pb[0] == 1 and r_pb[1] == -2:
-            #     rAll[2] += 1
-            # elif r_pb[0] == -2 and r_pb[1] == 1:
-            #     rAll[3] += 1
+          # Instead just record each agent's rewards
+          rAll[0] += r_pb[0]
+          rAll[1] += r_pb[1]
+          # if r_pb[0] == 1 and r_pb[1] == 0:
+          #     rAll[0] += 1
+          # elif r_pb[0] == 0 and r_pb[1] == 1:
+          #     rAll[1] += 1
+          # elif r_pb[0] == 1 and r_pb[1] == -2:
+          #     rAll[2] += 1
+          # elif r_pb[0] == -2 and r_pb[1] == 1:
+          #     rAll[3] += 1
 
         aAll[a_all[0]] += 1
         aAll[a_all[1] + 4] += 1
@@ -189,10 +197,9 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
       episodes_actions[agent] = episodes_actions[agent] * 0
       episodes_reward[agent] = episodes_reward[agent] * 0
 
-      if len(rList) % summary_len == 0 and len(rList) != 0 and updated:
+      if len(rList) % summary_len == 0 and len(rList) != 0:
         summary_step += 1
-        updated = False
-        print(total_steps, 'reward', np.sum(rList[-summary_len:], 0))
+        print(total_steps, 'mean episode reward', np.mean(rList, 0) / batch_size)
         rlog = np.sum(rList[-summary_len:], 0)
         for ii in range(len(rlog)):
           logger.record_tabular('rList[' + str(ii) + ']', rlog[ii])
