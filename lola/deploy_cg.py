@@ -68,8 +68,8 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
 
   corrections_func(mainPN, batch_size, trace_length, corrections, cube)
 
-  saver1_path = os.path.join(path1, 'variables-1058.meta')
-  model1_path = os.path.join(path1, 'variables-1058')
+  saver1_path = os.path.join(path1, 'variables-1.meta')
+  model1_path = os.path.join(path1, 'variables-1')
   # saver2_path = os.path.join(path2, 'variables-1.meta')
   # model2_path = os.path.join(path2, 'variables-1')
 
@@ -91,9 +91,12 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
   discount = np.expand_dims(discount, 0)
   discount_array = np.reshape(discount_array, [1, -1])
 
+  saver1 = tf.train.Saver(tf.trainable_variables())
   with tf.Session() as sess:
-    saver_1 = tf.train.import_meta_graph(saver1_path)
-    saver_1.restore(sess, model1_path)
+    # saver_1 = tf.train.import_meta_graph(saver1_path)
+    # ckpt = tf.train.get_checkpoint_state('./drqn/run_1')
+    # saver1.restore(sess, ckpt.model_checkpoint_path)
+    saver1.restore(sess, model1_path)
 
     if not mem_efficient:
       sess.run(cube_ops)
@@ -181,11 +184,6 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
       jList.append(j)
       rList.append(rAll)
       aList.append(aAll)
-
-      last_state = np.reshape(
-        np.concatenate(trainBatch1[3], axis=0),
-        [batch_size, trace_length, env.ob_space_shape[0],
-         env.ob_space_shape[1], env.ob_space_shape[2]])[:, -1, :, :, :]
 
       episodes_run_counter[agent] = episodes_run_counter[agent] * 0
       episodes_actions[agent] = episodes_actions[agent] * 0
