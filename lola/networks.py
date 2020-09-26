@@ -59,11 +59,11 @@ class Pnetwork:
                 name='sample_reward')
             with tf.variable_scope('input_proc', reuse=reuse):
                 output = layers.conv2d(self.state_input,
-                    kernel_size=3, filters=20,
-                    activation=tf.nn.relu)
+                    kernel_size=(3,3), filters=20,
+                    activation=tf.nn.relu, padding='same')
                 output = layers.conv2d(output,
-                    kernel_size=1, filters=20,
-                    activation=tf.nn.relu)
+                    kernel_size=(3,3), filters=20,
+                    activation=tf.nn.relu, padding='same')
                 output = layers.flatten(output)
                 print('values', output.get_shape())
                 self.value = tf.reshape(layers.dense(
