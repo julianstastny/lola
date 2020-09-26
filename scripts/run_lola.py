@@ -5,6 +5,7 @@ import time
 
 from lola import logger
 import matplotlib.pyplot as plt
+import pdb
 
 from lola.envs import *
 
@@ -75,24 +76,28 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                     './drqn/models/models-3/run_1/variables-526',
                     './drqn/models/models-3/run_2/variables-1059',
                     './drqn/models/models-4/run_1/variables-1059',
-                    './drqn/models/models-4/run_2/variables-523']
+                    './drqn/models/models-4/run_2/variables-523',
+                    './drqn/models/models-5/run_1/variables-1058',
+                    './drqn/models/models-5/run_2/variables-1057',
+                    './drqn/models/models-6/run_1/variables-522',
+                    './drqn/models/models-6/run_2/variables-1059']
 
-      for trial in range(len(models_lst)):
-        model1 = models_lst[trial]
-        sp1, sp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
-                   1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
-                   num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
-                   deploy_saved, path1=model1)
-        self_play_payoffs_1.append(sp1)
-        self_play_payoffs_2.append(sp2)
-        if trial > 0:
-          model2 = models_lst[trial-1]
-          cp1, cp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
-                                1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
-                                num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
-                                deploy_saved, path1=model1, path2=model2)
-          cross_play_payoffs_1.append(cp1)
-          cross_play_payoffs_2.append(cp2)
+      for model1 in models_lst:
+        for model2 in models_lst:
+          if model1 == model2:
+            sp1, sp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+                       1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+                       num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+                       deploy_saved, path1=model1)
+            self_play_payoffs_1.append(sp1)
+            self_play_payoffs_2.append(sp2)
+          else:
+            cp1, cp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+                                  1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+                                  num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+                                  deploy_saved, path1=model1, path2=model2)
+            cross_play_payoffs_1.append(cp1)
+            cross_play_payoffs_2.append(cp2)
       plt.scatter(self_play_payoffs_1, self_play_payoffs_2, label='self-play')
       plt.scatter(cross_play_payoffs_1, cross_play_payoffs_2, label='cross-play')
       plt.legend()
@@ -173,7 +178,8 @@ def experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                   corrections=lola,
                   opp_model=opp_model,
                   hidden=hidden,
-                  mem_efficient=mem_efficient
+                  mem_efficient=mem_efficient,
+                  path1=path1, path2=path2
                   )
         else:
           def run(env, save_path=None):

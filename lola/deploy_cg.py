@@ -3,7 +3,8 @@ Training funcion for the Coin Game.
 """
 import os
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import pdb
 
 from . import logger
@@ -71,10 +72,12 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
   # saver1_path = os.path.join(path1, 'models-1/run_1/variables-1060.meta')
   # model1_path = os.path.join(path1, 'models-1/run_1/variables-1060')
   saver1_path = os.path.join(path1, 'models-1/run_2/variables-1060.meta')
-  model1_path = os.path.join(path1, 'models-1/run_1/variables-1060')
+  # model1_path = os.path.join(path1, 'models-1/run_1/variables-1060')
+  model1_path = path1
   if path2 is not None:
   # saver2_path = os.path.join(path2, 'variables-1.meta')
-    model2_path = os.path.join(path2, 'models-1/run_2/variables-1060')
+    # model2_path = os.path.join(path2, 'models-1/run_2/variables-1060')
+    model2_path = path2
 
   # create lists to contain total rewards and steps per episode
   jList = []
@@ -206,7 +209,7 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
         logger.dump_tabular()
         logger.info('')
 
-  mean_payoffs_per_episode = np.mean(rList, 0) / batch_size
+  mean_payoffs_per_episode = np.mean(rList, axis=0) / batch_size
   mean_payoffs_per_episode_1 = mean_payoffs_per_episode[0]
   mean_payoffs_per_episode_2 = mean_payoffs_per_episode[1]
 

@@ -2,7 +2,7 @@
 Various utility functions.
 """
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def batch_to_seq(h, nbatch, nsteps, flat=False):
