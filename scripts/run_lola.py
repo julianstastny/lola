@@ -69,33 +69,41 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
       self_play_payoffs_2 = []
       cross_play_payoffs_1 = []
       cross_play_payoffs_2 = []
-      models_lst = ['./drqn/models/models-1/run_1/variables-1060',
-                    './drqn/models/models-1/run_2/variables-1060',
-                    './drqn/models/models-2/run_1/variables-1020',
-                    './drqn/models/models-2/run_2/variables-530',
-                    './drqn/models/models-3/run_1/variables-526',
-                    './drqn/models/models-3/run_2/variables-1059',
-                    './drqn/models/models-4/run_1/variables-1059',
-                    './drqn/models/models-4/run_2/variables-523',
-                    './drqn/models/models-5/run_1/variables-1058',
-                    './drqn/models/models-5/run_2/variables-1057',
-                    './drqn/models/models-6/run_1/variables-522',
-                    './drqn/models/models-6/run_2/variables-1059']
+      models_lst = ['./drqn/models/new-models-2/run_1/variables-3708']
+      # models_lst = ['./drqn/models/new-models-2/run_1/variables-3708',
+      #               './drqn/models/new-models-2/run_2/variables-3689',
+      #               './drqn/models/new-models-1/run_2/variables-3639',
+      #               './drqn/models/new-models-3/run_1/variables-3786',
+      #               './drqn/models/new-models-3/run_2/variables-3771',
+      #               './drqn/models/new-models-4/run_1/variables-3810',
+      #               './drqn/models/new-models-4/run_2/variables-3743',
+      #               './drqn/models/new-models-5/run_1/variables-4168',
+      #               './drqn/models/new-models-5/run_2/variables-2565',
+      #               './drqn/models/new-models-6/run_1/variables-3480',
+      #               './drqn/models/new-models-6/run_2/variables-3492',
+      #               './drqn/models/new-models-7/run_1/variables-2582',
+      #               './drqn/models/new-models-7/run_2/variables-3986',
+      #               './drqn/models/new-models-8/run_1/variables-3562',
+      #               './drqn/models/new-models-8/run_2/variables-3494'
+      #               ]
 
-      for model1 in models_lst:
-        for model2 in models_lst:
-          if model1 == model2:
+      num_models = len(models_lst)
+      for i in range(num_models):
+        for j in range (num_models):
+          model1 = models_lst[i]
+          if i == j:
             sp1, sp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                        1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
                        num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
                        deploy_saved, path1=model1)
             self_play_payoffs_1.append(sp1)
             self_play_payoffs_2.append(sp2)
-          else:
+          elif i < j:
+            model2 = models_lst[j]
             cp1, cp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
-                                  1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
-                                  num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
-                                  deploy_saved, path1=model1, path2=model2)
+                                1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+                                num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+                                deploy_saved, path1=model1, path2=model2)
             cross_play_payoffs_1.append(cp1)
             cross_play_payoffs_2.append(cp2)
       plt.scatter(self_play_payoffs_1, self_play_payoffs_2, label='self-play')

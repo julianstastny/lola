@@ -113,7 +113,6 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
     if not mem_efficient:
       sess.run(cube_ops)
 
-    sP = env.reset()
     for i in range(num_episodes):
       episodeBuffer = []
       for ii in range(n_agents):
@@ -128,9 +127,6 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
       sP = env.reset()
       s = sP
 
-      trainBatch0 = [[], [], [], [], [], []]
-      trainBatch1 = [[], [], [], [], [], []]
-      d = False
       rAll = np.zeros((4))
       aAll = np.zeros((env.NUM_ACTIONS * 2))
       j = 0
@@ -164,6 +160,7 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
         a_all = np.transpose(np.vstack(a_all))
 
         s1P, r, d = env.step(actions=a_all)
+        # env.render()
         s1 = s1P
 
         total_steps += 1
@@ -184,8 +181,8 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
           # elif r_pb[0] == -2 and r_pb[1] == 1:
           #     rAll[3] += 1
 
-        aAll[a_all[0]] += 1
-        aAll[a_all[1] + 4] += 1
+        # aAll[a_all[0]] += 1
+        # aAll[a_all[1] + 4] += 1
         s_old = s
         s = s1
         sP = s1P
@@ -194,7 +191,7 @@ def deploy(env, *, num_episodes, trace_length, batch_size,
 
       jList.append(j)
       rList.append(rAll)
-      aList.append(aAll)
+      # aList.append(aAll)
 
       episodes_run_counter[agent] = episodes_run_counter[agent] * 0
       episodes_actions[agent] = episodes_actions[agent] * 0
