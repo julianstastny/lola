@@ -2,6 +2,8 @@
 
 import click
 import time
+import datetime
+import yaml
 
 from lola import logger
 import matplotlib.pyplot as plt
@@ -70,6 +72,7 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
       cross_play_payoffs_1 = []
       cross_play_payoffs_2 = []
       models_lst = ['./drqn/models/new-models-2/run_1/variables-3708']
+      results_dict = {model_name: {} for model_name in models_lst}
       # models_lst = ['./drqn/models/new-models-2/run_1/variables-3708',
       #               './drqn/models/new-models-2/run_2/variables-3689',
       #               './drqn/models/new-models-1/run_2/variables-3639',
@@ -98,6 +101,7 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                        deploy_saved, path1=model1)
             self_play_payoffs_1.append(sp1)
             self_play_payoffs_2.append(sp2)
+            results_dict[model1][model1] = (float(sp1), float(sp2))
           elif i < j:
             model2 = models_lst[j]
             cp1, cp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
@@ -106,6 +110,13 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                                 deploy_saved, path1=model1, path2=model2)
             cross_play_payoffs_1.append(cp1)
             cross_play_payoffs_2.append(cp2)
+            results_dict[model1][model2] = (float(cp1), float(cp2))
+
+      stamp = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+      fname = 'cg-lola-{}.yml'.format(stamp)
+      with open(fname, 'w') as outfile:
+        yaml.dump(results_dict, outfile)
+
       plt.scatter(self_play_payoffs_1, self_play_payoffs_2, label='self-play')
       plt.scatter(cross_play_payoffs_1, cross_play_payoffs_2, label='cross-play')
       plt.legend()
