@@ -14,7 +14,11 @@ setup(
     description='Learning with Opponent-Learning Awareness.',
     long_description=read('README.md'),
     license='MIT',
+    # install_requires=[
+    #     'click', 'gym==0.10.5', 'mock', 'numpy>=1.11', 'dm-sonnet==1.20', 'tensorflow>=1.8.0, <2',
+    # ],
     install_requires=[
-        'click', 'gym==0.10.5', 'mock', 'numpy>=1.11', 'dm-sonnet==1.20', 'tensorflow>=1.8.0, <2',
+        'click', 'gym==0.10.5', 'mock', 'numpy>=1.11', 'dm-sonnet==1.20', 'tensorflow>=1.8.0'
     ],
+
 )

@@ -2,8 +2,10 @@
 Policy and value networks used in LOLA experiments.
 """
 import copy
-import tensorflow as tf
-import tensorflow.contrib.layers as layers
+import pdb
+import tensorflow.compat.v1 as tf
+import tensorflow.compat.v1.layers as layers
+tf.disable_v2_behavior()
 
 from .utils import *
 
@@ -56,15 +58,15 @@ class Pnetwork:
                 dtype=tf.float32,
                 name='sample_reward')
             with tf.variable_scope('input_proc', reuse=reuse):
-                output = layers.convolution2d(self.state_input,
-                    stride=1, kernel_size=3, num_outputs=20,
-                    normalizer_fn=layers.batch_norm, activation_fn=tf.nn.relu)
-                output = layers.convolution2d(output,
-                    stride=1, kernel_size=3, num_outputs=20,
-                    normalizer_fn=layers.batch_norm, activation_fn=tf.nn.relu)
+                output = layers.conv2d(self.state_input,
+                    kernel_size=(3,3), filters=20,
+                    activation=tf.nn.relu, padding='same')
+                output = layers.conv2d(output,
+                    kernel_size=(3,3), filters=20,
+                    activation=tf.nn.relu, padding='same')
                 output = layers.flatten(output)
                 print('values', output.get_shape())
-                self.value = tf.reshape(layers.fully_connected(
+                self.value = tf.reshape(layers.dense(
                     tf.nn.relu(output), 1), [-1, trace_length])
             if step:
                 output_seq = batch_to_seq(output, self.batch_size, 1)
@@ -74,9 +76,9 @@ class Pnetwork:
                                             scope='rnn', nh=h_size)
             output = seq_to_batch(output_seq)
 
-            output = layers.fully_connected(output,
-                                            num_outputs=env.NUM_ACTIONS,
-                                            activation_fn=None)
+            output = layers.dense(output,
+                                            units=env.NUM_ACTIONS,
+                                            activation=None)
             self.log_pi = tf.nn.log_softmax(output)
             self.lstm_state_output = state_output
 

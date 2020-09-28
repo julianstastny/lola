@@ -3,7 +3,8 @@ Training funcion for the Coin Game.
 """
 import os
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import pdb
 
 from . import logger
@@ -47,7 +48,7 @@ def train(env, *, num_episodes, trace_length, batch_size,
     max_epLength = trace_length+1 #The max allowed length of our episode.
     summary_len = 20 #Number of episodes to periodically save for analysis
 
-    tf.reset_default_graph()
+    # tf.reset_default_graph()
     mainPN = []
     mainPN_step = []
     agent_list = np.arange(total_n_agents)

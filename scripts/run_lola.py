@@ -4,6 +4,8 @@ import click
 import time
 
 from lola import logger
+import matplotlib.pyplot as plt
+import pdb
 
 from lola.envs import *
 
@@ -25,7 +27,8 @@ from lola.envs import *
 @click.option("--trials", type=int, default=1, help="Number of trials.")
 @click.option("--seed", type=int, default=None, help="Random Seed.")
 @click.option("--run_id", type=int, default=0, help="For the saving path.")
-
+@click.option("--deploy_saved/--no-deploy_saved", default=False,
+              help="Evaluate saved models rather than learn new ones.")
 
 
 # Learning parameters
@@ -56,10 +59,61 @@ from lola.envs import *
               help="Regularization parameter.")
 @click.option("--gamma", type=float, default=None,
               help="Discount factor.")
-
 def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
          trials, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
-         num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id):
+         num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+         deploy_saved):
+
+    if deploy_saved:
+      self_play_payoffs_1 = []
+      self_play_payoffs_2 = []
+      cross_play_payoffs_1 = []
+      cross_play_payoffs_2 = []
+      models_lst = ['./drqn/models/models-1/run_1/variables-1060',
+                    './drqn/models/models-1/run_2/variables-1060',
+                    './drqn/models/models-2/run_1/variables-1020',
+                    './drqn/models/models-2/run_2/variables-530',
+                    './drqn/models/models-3/run_1/variables-526',
+                    './drqn/models/models-3/run_2/variables-1059',
+                    './drqn/models/models-4/run_1/variables-1059',
+                    './drqn/models/models-4/run_2/variables-523',
+                    './drqn/models/models-5/run_1/variables-1058',
+                    './drqn/models/models-5/run_2/variables-1057',
+                    './drqn/models/models-6/run_1/variables-522',
+                    './drqn/models/models-6/run_2/variables-1059']
+
+      for model1 in models_lst:
+        for model2 in models_lst:
+          if model1 == model2:
+            sp1, sp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+                       1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+                       num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+                       deploy_saved, path1=model1)
+            self_play_payoffs_1.append(sp1)
+            self_play_payoffs_2.append(sp2)
+          else:
+            cp1, cp2 = experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+                                  1, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+                                  num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+                                  deploy_saved, path1=model1, path2=model2)
+            cross_play_payoffs_1.append(cp1)
+            cross_play_payoffs_2.append(cp2)
+      plt.scatter(self_play_payoffs_1, self_play_payoffs_2, label='self-play')
+      plt.scatter(cross_play_payoffs_1, cross_play_payoffs_2, label='cross-play')
+      plt.legend()
+      plt.show()
+    else:
+      experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+                 trials, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+                 num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+                 deploy_saved)
+
+
+
+def experiment(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
+         trials, lr, lr_correction, batch_size, bs_mul, simple_net, hidden,
+         num_units, reg, gamma, lola, opp_model, mem_efficient, seed, run_id,
+         deploy_saved, path1=None, path2=None):
     # Sanity
     assert exp_name in {"CoinGame", "IPD", "IMP"}
 
@@ -110,9 +164,10 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                   hidden=hidden,
                   mem_efficient=mem_efficient)
     elif exp_name == "CoinGame":
-        def run(env, save_path=None):
-            from lola.train_cg import train
-            train(env,
+        if deploy_saved:
+          from lola.deploy_cg import deploy
+          def run(env):
+            return deploy(env,
                   num_episodes=num_episodes,
                   trace_length=trace_length,
                   batch_size=batch_size,
@@ -124,8 +179,25 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
                   opp_model=opp_model,
                   hidden=hidden,
                   mem_efficient=mem_efficient,
-                  path=save_path
+                  path1=path1, path2=path2
                   )
+        else:
+          def run(env, save_path=None):
+              from lola.train_cg import train
+              train(env,
+                    num_episodes=num_episodes,
+                    trace_length=trace_length,
+                    batch_size=batch_size,
+                    bs_mul=bs_mul,
+                    gamma=gamma,
+                    grid_size=grid_size,
+                    lr=lr,
+                    corrections=lola,
+                    opp_model=opp_model,
+                    hidden=hidden,
+                    mem_efficient=mem_efficient,
+                    path=save_path
+                    )
 
     # Instantiate the environment
     if exp_name == "IPD":
@@ -141,10 +213,15 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
     # Run training
     if seed is None:
         assert trials==1, "If doing more than one trial, specify seed."
-        logger.configure(dir='logs/{}/no-seed-run{}'.format(exp_name, run_id))
+        # logger.configure(dir='logs/{}/no-seed-run{}'.format(exp_name, run_id))
         start_time = time.time()
-        run(env, save_path=f"./drqn/run_{run_id}")
+        if deploy_saved:
+          payoff_1, payoff_2 = run(env)
+          return payoff_1, payoff_2
+        else:
+          run(env, save_path=f"./drqn/run_{run_id}")
         end_time  = time.time()
+
     else:
         for _seed in range(seed, seed + trials):
             logger.configure(dir='logs/{}/seed-{}'.format(exp_name, _seed))
@@ -152,5 +229,6 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
             run(env, save_path=f"./drqn_{_seed}")
             end_time = time.time()
 
+
 if __name__ == '__main__':
-    main()
+    results = main()

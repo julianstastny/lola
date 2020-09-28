@@ -1,4 +1,5 @@
 export KMP_AFFINITY=disabled
+export KMP_DUPLICATE_LIB_OK=TRUE
 
 NPROC=$(nproc)
 echo "$NPROC"
