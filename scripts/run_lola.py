@@ -71,25 +71,26 @@ def main(exp_name, num_episodes, trace_length, exact, pseudo, grid_size,
       self_play_payoffs_2 = []
       cross_play_payoffs_1 = []
       cross_play_payoffs_2 = []
-      models_lst = ['./drqn/models/new-models-2/run_1/variables-3708']
-      results_dict = {model_name: {} for model_name in models_lst}
       # models_lst = ['./drqn/models/new-models-2/run_1/variables-3708',
-      #               './drqn/models/new-models-2/run_2/variables-3689',
-      #               './drqn/models/new-models-1/run_2/variables-3639',
-      #               './drqn/models/new-models-3/run_1/variables-3786',
-      #               './drqn/models/new-models-3/run_2/variables-3771',
-      #               './drqn/models/new-models-4/run_1/variables-3810',
-      #               './drqn/models/new-models-4/run_2/variables-3743',
-      #               './drqn/models/new-models-5/run_1/variables-4168',
-      #               './drqn/models/new-models-5/run_2/variables-2565',
-      #               './drqn/models/new-models-6/run_1/variables-3480',
-      #               './drqn/models/new-models-6/run_2/variables-3492',
-      #               './drqn/models/new-models-7/run_1/variables-2582',
-      #               './drqn/models/new-models-7/run_2/variables-3986',
-      #               './drqn/models/new-models-8/run_1/variables-3562',
-      #               './drqn/models/new-models-8/run_2/variables-3494'
-      #               ]
+      #             './drqn/models/new-models-2/run_2/variables-3689',
+      #             './drqn/models/new-models-1/run_2/variables-3639',
+      #             './drqn/models/new-models-3/run_1/variables-3786',
+      #             './drqn/models/new-models-3/run_2/variables-3771',
+      #             './drqn/models/new-models-4/run_1/variables-3810',
+      #             './drqn/models/new-models-4/run_2/variables-3743',
+      #             './drqn/models/new-models-5/run_1/variables-4168',
+      #             './drqn/models/new-models-5/run_2/variables-2565',
+      #             './drqn/models/new-models-6/run_1/variables-3480',
+      #             './drqn/models/new-models-6/run_2/variables-3492',
+      #             './drqn/models/new-models-7/run_1/variables-2582',
+      #             './drqn/models/new-models-7/run_2/variables-3986',
+      #             './drqn/models/new-models-8/run_1/variables-3562',
+      #             './drqn/models/new-models-8/run_2/variables-3494'
+      #             ]
+      models_lst = ['./drqn/models/models1-3/run_1/variables-5000',
+                    './drqn/models/models1-3/run_2/variables-3771']
 
+      results_dict = {model_name: {} for model_name in models_lst}
       num_models = len(models_lst)
       for i in range(num_models):
         for j in range (num_models):
